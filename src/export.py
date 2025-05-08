@@ -9,7 +9,9 @@ def export_pdfa_dot(pdfa: PDFA, output_file: str) -> None:
 
     # Add nodes
     for state_id, state in pdfa.states.items():
-        label = f"{state_id}\\n#{state.total_frequency()}({state.final_frequency})"
+        label = f"{state_id}\\n#{state.final_frequency}/{state.total_frequency()}"
+        if state.final_frequency > 0:
+            label += f" fin: {state.sink}"
         shape = "doublecircle" if state.final_frequency > 0 else "circle"
         style = "filled" if state == pdfa.start_state else "solid"
         fillcolor = "lightblue" if state == pdfa.start_state else "white"
@@ -18,7 +20,7 @@ def export_pdfa_dot(pdfa: PDFA, output_file: str) -> None:
     # Add edges
     for state_id, state in pdfa.states.items():
         for t in state.transitions.values():
-            label = f"{t.symbol} #{t.frequency}"
+            label = f"{t.symbol} #{t.frequency}/{state.total_frequency()}"
             dot.edge(str(state_id), str(t.target), label=label)
 
     # Add initial dummy node pointing to start state

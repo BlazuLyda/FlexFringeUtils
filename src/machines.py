@@ -15,34 +15,35 @@ def simple_machine() -> PDFA:
     return PDFA(name="simple_machine", states=[s0, s1, s2], start_state=0, alphabet_size=2)
 
 
-def machine_1() -> PDFA:
-    pdfa = PDFA(name="machine_1", alphabet_size=2)
+def parity_machine() -> PDFA:
+    pdfa = PDFA(name="parity", alphabet_size=2)
 
     # Add states
-    for state_id in range(4):
-        pdfa.add_state(state_id)
+    pdfa.add_sink(0, 0)
+    pdfa.add_sink(1, 1)
+    pdfa.add_state(2)
 
     # Set frequencies
-    pdfa.states[0].final_frequency = 0
-    pdfa.states[1].final_frequency = 0
-    pdfa.states[2].final_frequency = 0
-    pdfa.states[3].final_frequency = 10  # Accepting state
+    pdfa.states[0].final_frequency = 1
+    pdfa.states[1].final_frequency = 1
 
     # Define transitions
-    pdfa.add_edge(0, 0, 1, 5)  # From 0 with label 0 to 1
-    pdfa.add_edge(0, 1, 2, 5)  # From 0 with label 1 to 2
-    pdfa.add_edge(1, 0, 3, 3)  # From 1 with label 0 to accepting state 3
-    pdfa.add_edge(2, 1, 3, 3)  # From 2 with label 1 to accepting state 3
+    pdfa.add_edge(2, 0, 0, 1)
+    pdfa.add_edge(2, 1, 1, 1)
+    pdfa.add_edge(0, 0, 0, 1)
+    pdfa.add_edge(0, 1, 1, 1)
+    pdfa.add_edge(1, 0, 0, 1)
+    pdfa.add_edge(1, 1, 1, 1)
 
-    # Initial state is 0
-    pdfa.start_state = 0
+    # Initial state is 2
+    pdfa.start_state = 2
 
     return pdfa
 
 
 MachineMaker = Callable[[], PDFA]
 
-MACHINE: MachineMaker = machine_1
+MACHINE: MachineMaker = parity_machine
 NUM_TRACES = 50
 
 if __name__ == "__main__":

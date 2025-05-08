@@ -14,11 +14,13 @@ class PDFAState:
 
     id: int
     final_frequency: int
+    sink: Optional[int]
     transitions: Dict[int, PDFATransition]
 
-    def __init__(self, id: int, final_frequency: int = 0) -> None:
+    def __init__(self, id: int, final_frequency: int = 0, sink: Optional[int] = None) -> None:
         self.id = id
         self.final_frequency = final_frequency
+        self.sink = sink
         self.transitions = {}
 
 
@@ -30,7 +32,9 @@ class PDFAState:
         return self.final_frequency + sum(t.frequency for t in self.transitions.values())
 
 
-    def choose_next(self) -> Optional[Tuple[int, int]]:
+    """Returns either (symbol, next_id) if transition or (sink_type, None) if reached sink"""
+    def choose_next(self) -> Tuple[int, Optional[int]]:
+
         total = self.total_frequency()
         if total == 0:
             raise ValueError("Ended up in state with 0 total count")
@@ -38,7 +42,9 @@ class PDFAState:
         r = random.randint(1, total)
         current = self.final_frequency
         if r <= current:
-            return None  # Accepted (final state)
+            if self.sink is None:
+                raise ValueError(f"Node {self.id} with non zero final frequency is not a sink")
+            return self.sink, None # Accepted (final state)
 
         for symbol, t in self.transitions.items():
             current += t.frequency
@@ -46,6 +52,8 @@ class PDFAState:
                 return symbol, t.target 
         raise ValueError("Something went very wrong")
 
+
+Trace = Tuple[int, List[int]]
 
 class PDFA:
 
@@ -65,26 +73,31 @@ class PDFA:
         self.states[id] = PDFAState(id)
         return self.states[id]
 
+    def add_sink(self, id: int, sink: int) -> PDFAState:
+        self.states[id] = PDFAState(id, sink=sink)
+        return self.states[id]
+
 
     def add_edge(self, origin: int, label: int, target: int, frequency: int) -> None:
         self.states[origin].add_transition(label, target, frequency)
 
 
-    def generate_trace(self) -> List[int]:
+    def generate_trace(self) -> Trace:
         trace: List[int] = []
+        final_label: int = 0
         state: PDFAState = self.states[self.start_state]
 
         while True:
-            choice = state.choose_next()
-            if choice is None:
+            symbol, next_state_id = state.choose_next()
+            if next_state_id is None:
+                final_label = symbol
                 break  # Accepted
-            symbol, next_state_id = choice
             trace.append(symbol)
             state = self.states[next_state_id]
-        return trace
+        return final_label, trace
 
 
-    def generate_dataset(self, num_traces: int) -> List[List[int]]:
+    def generate_dataset(self, num_traces: int) -> List[Trace]:
         return [self.generate_trace() for _ in range(num_traces)]
 
 
@@ -92,5 +105,5 @@ class PDFA:
         traces = self.generate_dataset(num_traces)
         with open(out_path, "w") as f:
             f.write(f"{num_traces} {self.alphabet_size}\n")
-            for trace in traces:
-                f.write(f"1 {len(trace)} {' '.join(map(str, trace))}\n")
+            for label, trace in traces:
+                f.write(f"{label} {len(trace)} {' '.join(map(str, trace))}\n")
