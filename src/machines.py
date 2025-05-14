@@ -19,24 +19,20 @@ def parity_machine() -> PDFA:
     pdfa = PDFA(name="parity", alphabet_size=2)
 
     # Add states
-    pdfa.add_sink(0, 0)
-    pdfa.add_sink(1, 1)
-    pdfa.add_state(2)
+    pdfa.add_sink(0)
+    pdfa.add_state(1)
 
     # Set frequencies
     pdfa.states[0].final_frequency = 1
-    pdfa.states[1].final_frequency = 1
 
     # Define transitions
-    pdfa.add_edge(2, 0, 0, 1)
-    pdfa.add_edge(2, 1, 1, 1)
     pdfa.add_edge(0, 0, 0, 1)
     pdfa.add_edge(0, 1, 1, 1)
     pdfa.add_edge(1, 0, 0, 1)
     pdfa.add_edge(1, 1, 1, 1)
 
-    # Initial state is 2
-    pdfa.start_state = 2
+    # Initial state is 0
+    pdfa.start_state = 0
 
     return pdfa
 
@@ -44,10 +40,12 @@ def parity_machine() -> PDFA:
 MachineMaker = Callable[[], PDFA]
 
 MACHINE: MachineMaker = parity_machine
-NUM_TRACES = 50
+TRAIN_SIZE = 1000
+TEST_SIZE = 100
 
 if __name__ == "__main__":
 
     pdfa = MACHINE()
-    pdfa.write_dataset(num_traces=NUM_TRACES, out_path=f"data/{pdfa.name}_training.txt")
+    pdfa.write_trainset(num_traces=TRAIN_SIZE, out_path=f"data/{pdfa.name}_training.txt")
+    pdfa.write_testset(test_size=TEST_SIZE, traces_out_path=f"data/{pdfa.name}_test.txt", solutions_out_path=f"data/{pdfa.name}_solution.txt")
     export_pdfa_dot(pdfa, f"data/{pdfa.name}")
