@@ -37,11 +37,55 @@ def parity_machine() -> PDFA:
     return pdfa
 
 
+# From "Learning Stochastic Regular Languages..."
+def reber() -> PDFA:
+    pdfa = PDFA(name="reber_grammar", alphabet_size=7)
+
+    # Alphabet:
+    B=0; T=1; P=2; S=3; X=4; E=5; V=6
+
+    # Add states
+    pdfa.add_state(0)
+    pdfa.add_state(1)
+    pdfa.add_state(2)
+    pdfa.add_state(3)
+    pdfa.add_state(4)
+    pdfa.add_state(5)
+    pdfa.add_state(6)
+    pdfa.add_sink(7)
+    pdfa.states[7].final_frequency = 1
+
+    # Define transitions 
+    pdfa.add_edge(0, B, 1, 10)
+
+    pdfa.add_edge(1, T, 2, 5)
+    pdfa.add_edge(1, P, 3, 5)
+
+    pdfa.add_edge(2, S, 2, 6)
+    pdfa.add_edge(2, X, 4, 4)
+    
+    pdfa.add_edge(3, T, 3, 7)
+    pdfa.add_edge(3, V, 5, 3)
+
+    pdfa.add_edge(4, X, 3, 5)
+    pdfa.add_edge(4, S, 6, 5)
+
+    pdfa.add_edge(5, P, 4, 5)
+    pdfa.add_edge(5, V, 6, 5)
+
+    pdfa.add_edge(6, E, 7, 10)
+
+    # Initial state is 0
+    pdfa.start_state = 0
+
+    return pdfa
+
+
 MachineMaker = Callable[[], PDFA]
 
-MACHINE: MachineMaker = parity_machine
-TRAIN_SIZE = 1000
-TEST_SIZE = 100
+MACHINE: MachineMaker = reber
+TRAIN_SIZE = 10000
+TEST_SIZE = 1000
 
 if __name__ == "__main__":
 

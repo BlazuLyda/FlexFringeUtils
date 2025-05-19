@@ -114,9 +114,12 @@ class PDFA:
         return [self.generate_trace() for _ in range(num_traces)]
 
 
-    """Generates and writes a set of traces to a file in abbadingo format"""
-    def write_trainset(self, num_traces: int, out_path: str) -> List[Trace]:
-        traces = self.generate_dataset(num_traces)
+    """
+    Generates and writes a set of traces to a file in abbadingo format.
+    Length of 'append_to' should be smaller equal than 'num_traces'.
+    """
+    def write_trainset(self, num_traces: int, out_path: str, append_to: List[Trace] = []) -> List[Trace]:
+        traces: List[Trace] = append_to + self.generate_dataset(num_traces - len(append_to))
         with open(out_path, "w") as f:
             f.write(f"{num_traces} {self.alphabet_size}\n")
             for trace in traces:
