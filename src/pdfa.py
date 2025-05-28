@@ -114,11 +114,11 @@ class PDFA:
         return [self.generate_trace() for _ in range(num_traces)]
 
 
-    """
-    Generates and writes a set of traces to a file in abbadingo format.
-    Length of 'append_to' should be smaller equal than 'num_traces'.
-    """
     def write_trainset(self, num_traces: int, out_path: str, append_to: List[Trace] = []) -> List[Trace]:
+        """
+        Generates and writes a set of traces to a file in abbadingo format.
+        Length of 'append_to' should be smaller equal than 'num_traces'.
+        """
         traces: List[Trace] = append_to + self.generate_dataset(num_traces - len(append_to))
         with open(out_path, "w") as f:
             f.write(f"{num_traces} {self.alphabet_size}\n")
@@ -127,11 +127,11 @@ class PDFA:
         return traces
 
 
-    """
-    Generates and writes a test set of traces in abbadingo format. Additionaly,
-    writes the traces probabilities to solutions files.
-    """
     def write_testset(self, test_size: int, traces_out_path: str, solutions_out_path: str) -> None:
+        """
+        Generates and writes a test set of traces in abbadingo format. Additionaly,
+        writes the traces probabilities to solutions files.
+        """
         traces = self.write_trainset(test_size, traces_out_path)
         with open(solutions_out_path, "w") as f:
             f.write(f"{test_size}\n")

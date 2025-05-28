@@ -1,6 +1,7 @@
 from typing import Callable
+import random
 from pdfa import PDFAState, PDFA
-from export import export_pdfa_dot
+from export import export_pdfa_dot, export_pdfa_json, import_pdfa_json
 
 def simple_machine() -> PDFA:
     # Build a sample PDFA manually
@@ -15,6 +16,7 @@ def simple_machine() -> PDFA:
     return PDFA(name="simple_machine", states=[s0, s1, s2], start_state=0, alphabet_size=2)
 
 
+# Machine that accepts strings ending with a "0", for example "00", "110", "01110"
 def parity_machine() -> PDFA:
     pdfa = PDFA(name="parity", alphabet_size=2)
 
@@ -25,7 +27,7 @@ def parity_machine() -> PDFA:
     # Set frequencies
     pdfa.states[0].final_frequency = 1
 
-    # Define transitions
+    # Define transitions: node_from, symbol, node_to, frequency 
     pdfa.add_edge(0, 0, 0, 1)
     pdfa.add_edge(0, 1, 1, 1)
     pdfa.add_edge(1, 0, 0, 1)
@@ -55,7 +57,7 @@ def reber() -> PDFA:
     pdfa.add_sink(7)
     pdfa.states[7].final_frequency = 1
 
-    # Define transitions 
+    # Define transitions: node_from, symbol, node_to, frequency 
     pdfa.add_edge(0, B, 1, 10)
 
     pdfa.add_edge(1, T, 2, 5)
@@ -81,6 +83,81 @@ def reber() -> PDFA:
     return pdfa
 
 
+def random_pdfa(
+    name: str = "random",
+    min_states: int = 5,
+    max_states: int = 75,
+    min_alpha: int = 4,
+    max_alpha: int = 24,
+    sym_sparsity_range=(0.2, 0.8),
+    trans_sparsity_range=(0.0, 0.2),
+    frequency_range=(1, 5)
+) -> PDFA:
+    """
+    Generate a random Probabilistic DFA per PAutomaC spec (simplified):
+      - |Q| uniformly in [min_states, max_states]
+      - |Σ| uniformly in [min_alpha, max_alpha]
+      - Symbol-sparsity: pick between 20-80% of state-symbol pairs
+      - For each selected (q,a), add exactly one transition to random target
+      - Transition-sparsity: add 0-20% more transitions chosen similarly
+      - All edge frequencies set to 1; single sink state is accepting with freq=1.
+    """
+    # 1) Pick sizes
+    n_states = random.randint(min_states, max_states)
+    alpha    = random.randint(min_alpha, max_alpha)
+    freq = lambda : random.randint(frequency_range[0], frequency_range[1])
+
+    # 2) Create empty PDFA
+    pdfa = PDFA(name=name, alphabet_size=alpha)
+    for q in range(n_states):
+        pdfa.add_state(q)
+    sink = n_states
+    pdfa.add_sink(sink)
+    pdfa.states[sink].final_frequency = freq()  # make sink accepting
+    pdfa.start_state = 0
+
+    # 3) All possible (state, symbol) pairs
+    all_pairs = [(q, a) for q in range(n_states) for a in range(alpha)]
+
+    # 4) Symbol sparsity: sample some fraction of these pairs
+    frac_sym = random.uniform(*sym_sparsity_range)
+    k_sym    = int(len(all_pairs) * frac_sym)
+    sym_pairs = random.sample(all_pairs, k_sym)
+
+    for (q, a) in sym_pairs:
+        tgt = random.randint(0, sink)
+        pdfa.add_edge(q, a, tgt, frequency=freq())
+
+    # 5) Transition sparsity: sample additional pairs from the remainder
+    remainder = [p for p in all_pairs if p not in sym_pairs]
+    frac_trans = random.uniform(*trans_sparsity_range)
+    k_trans    = int(len(remainder) * frac_trans)
+    extra_pairs = random.sample(remainder, k_trans)
+
+    for (q, a) in extra_pairs:
+        tgt = random.randint(0, sink)
+        pdfa.add_edge(q, a, tgt, frequency=freq())
+
+    # 6) Add transitions to states with 0 edge count
+    not_dead_states = set([sink])
+    for q in range(0, sink):
+        if pdfa.states[q].total_frequency() > 0:
+            not_dead_states.add(q)
+    print("Not dead states: ", not_dead_states)
+
+    for (q, a) in all_pairs:
+        if q in not_dead_states:
+            continue
+        # Add transition to somewhere else than the state itself
+        tgt = q
+        while tgt == q:
+            tgt = random.randint(0, sink)
+        pdfa.add_edge(q, a, tgt, frequency=freq())
+        not_dead_states.add(q)
+
+    return pdfa
+
+
 MachineMaker = Callable[[], PDFA]
 
 MACHINE: MachineMaker = reber
@@ -89,7 +166,13 @@ TEST_SIZE = 1000
 
 if __name__ == "__main__":
 
-    pdfa = MACHINE()
-    pdfa.write_trainset(num_traces=TRAIN_SIZE, out_path=f"data/{pdfa.name}_training.txt")
-    pdfa.write_testset(test_size=TEST_SIZE, traces_out_path=f"data/{pdfa.name}_test.txt", solutions_out_path=f"data/{pdfa.name}_solution.txt")
-    export_pdfa_dot(pdfa, f"data/{pdfa.name}")
+    pdfa = random_pdfa(
+        min_states = 20, 
+        max_states=25, 
+        min_alpha=12, 
+        max_alpha=14, 
+        sym_sparsity_range=(0.2, 0.3), 
+        trans_sparsity_range=(0.0, 0.1)
+    )
+    export_pdfa_dot(pdfa, f"models/{pdfa.name}")
+    export_pdfa_json(pdfa) 
