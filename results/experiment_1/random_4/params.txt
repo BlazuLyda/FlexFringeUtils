@@ -1,0 +1,7 @@
+experiment = experiment_1
+dataset = random_4
+runs = 50
+models = SINGLE;GREEDY_15;GREEDY_30
+trainset_size = 150
+testset_size = 1000
+seed = 2288273942

@@ -1,0 +1,11 @@
+experiment = experiment_3
+dataset = random_3
+runs = 10
+models = ALL;SMALL;MAX_IMV;K_MEDOIDS;AFFINITY;MAX_IMV_OUT;AFFINITY_OUT
+total_estimators = 200
+rand = 2.5
+trainset_size = 400
+testset_size = 1500
+seed = 2464319374
+sample_size = 700
+pruned_size = 20

@@ -1,0 +1,9 @@
+experiment = experiment_3
+dataset = random_4
+runs = 10
+models = SINGLE;ALL
+total_estimators = 400
+rand = 2.5
+trainset_size = 150
+testset_size = 1000
+seed = 2409987417

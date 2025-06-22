@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
@@ -111,7 +112,28 @@ class PDFA:
 
 
     def generate_dataset(self, num_traces: int) -> List[Trace]:
+        """
+        Performs num_traces random walk through the pdfa generating traces. The relative frequencies of the traces
+        reflect the real pdfa distribution. 
+        """
         return [self.generate_trace() for _ in range(num_traces)]
+
+    def generate_testset(self, num_traces: int) -> List[Trace]:
+        """
+        Generates num_traces unique traces. The probabilities of the traces divided by the sum of all probabilities
+        in this set should reflect the real pdfa distribution. 
+        """
+        seen: set[tuple[int, ...]] = set()
+        unique_traces: list[Trace] = []
+
+        while len(unique_traces) < num_traces:
+            trace = self.generate_trace()
+            key = tuple(trace.symbols)
+            if key not in seen:
+                seen.add(key)
+                unique_traces.append(trace)
+
+        return unique_traces
 
 
     def write_trainset(self, num_traces: int, out_path: str, append_to: List[Trace] = []) -> List[Trace]:
@@ -120,6 +142,7 @@ class PDFA:
         Length of 'append_to' should be smaller equal than 'num_traces'.
         """
         traces: List[Trace] = append_to + self.generate_dataset(num_traces - len(append_to))
+        # Write the traces
         with open(out_path, "w") as f:
             f.write(f"{num_traces} {self.alphabet_size}\n")
             for trace in traces:
@@ -127,13 +150,20 @@ class PDFA:
         return traces
 
 
-    def write_testset(self, test_size: int, traces_out_path: str, solutions_out_path: str) -> None:
+    def write_testset(self, test_size: int, traces_out_path: str, solutions_out_path: str) -> List[Trace]:
         """
         Generates and writes a test set of traces in abbadingo format. Additionaly,
         writes the traces probabilities to solutions files.
         """
-        traces = self.write_trainset(test_size, traces_out_path)
+        traces = self.generate_testset(test_size)
+        # Write the unique traces
+        with open(traces_out_path, "w") as f:
+            f.write(f"{test_size} {self.alphabet_size}\n")
+            for trace in traces:
+                f.write(f"{trace.sink} {len(trace.symbols)} {' '.join(map(str, trace.symbols))}\n")
+        # Write the solutions
         with open(solutions_out_path, "w") as f:
             f.write(f"{test_size}\n")
             for trace in traces:
                 f.write(f"{trace.prob}\n")
+        return traces

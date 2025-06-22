@@ -1,0 +1,7 @@
+experiment = experiment_1
+dataset = reber
+runs = 50
+models = SINGLE;GREEDY_15;GREEDY_30
+trainset_size = 80
+testset_size = 300
+seed = 2410576531

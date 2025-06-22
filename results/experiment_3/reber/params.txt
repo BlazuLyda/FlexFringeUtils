@@ -1,0 +1,7 @@
+experiment = experiment_3
+dataset = reber
+runs = 2
+models = SINGLE;ENSEMBLE(est=20, rand=2.5)
+trainset_size = 35
+testset_size = 300
+seed = 2408377094

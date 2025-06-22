@@ -168,10 +168,10 @@ if __name__ == "__main__":
 
     pdfa = random_pdfa(
         min_states = 20, 
-        max_states=25, 
-        min_alpha=12, 
-        max_alpha=14, 
-        sym_sparsity_range=(0.2, 0.3), 
+        max_states=30, 
+        min_alpha=20, 
+        max_alpha=24, 
+        sym_sparsity_range=(0.3, 0.3), 
         trans_sparsity_range=(0.0, 0.1)
     )
     export_pdfa_dot(pdfa, f"models/{pdfa.name}")

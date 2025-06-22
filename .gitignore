@@ -2,3 +2,5 @@ data/
 .venv/
 src/__pycache__/
 **/flexfringe.log
+**/.cache/
+graphs/

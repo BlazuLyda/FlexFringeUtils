@@ -18,6 +18,12 @@ matplotlib = "^3.10.3"
 pyright = "^1.1.400"
 ipympl = "^0.9.7"
 umap-learn = "^0.5.7"
+numpy = "<2.1"
+kmedoids = "^0.5.3.1"
+tqdm = "^4.67.1"
+pytest = "^8.4.1"
+pandas = "^2.3.0"
+jinja2 = "^3.1.6"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
